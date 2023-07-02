@@ -1,23 +1,25 @@
 import express, { Express, Request, Response } from "express";
 import dotenv from "dotenv";
-import expressSession from "express-session";
-
+import { auth } from "express-oauth2-jwt-bearer";
 dotenv.config();
 
 const app: Express = express();
 const port = process.env.PORT;
 
-const config = {
-  authRequired: false,
-  auth0Logout: true,
-  secret: process.env.AUTH_SECRET,
-  baseURL: "https://localhost:3000",
-  clientID: "B8BtoZkwNhUf1qcl0IiLMoFFKYt3YsYZ",
-  issuerBaseURL: "https://dev-5x0s2u4w2onpnsxq.us.auth0.com",
-};
-app.use(auth(config));
+const checkJwt = auth({
+  audience: process.env.API_ID,
+  issuerBaseURL: process.env.BASE_URL,
+});
+
 app.get("/", (req: Request, res: Response) => {
-  res.send(req.oidc.isAuthenticated() ? "Logged in" : "Logged out");
+  res.json({
+    message: "Public endpoint",
+  });
+});
+app.get("/private", checkJwt, (req, res) => {
+  res.json({
+    message: "private endpoint",
+  });
 });
 
 app.listen(port, () => {
